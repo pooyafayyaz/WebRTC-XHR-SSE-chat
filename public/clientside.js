@@ -1,9 +1,8 @@
-//our username
 var name;
 var connectedUser;
 
 //connecting to our signaling server
-var conn = new WebSocket('ws://localhost:9090');
+var conn = new WebSocket("wss://localhost:445");
 
 conn.onopen = function () {
    console.log("Connected to the signaling server");
@@ -45,10 +44,12 @@ conn.onerror = function (err) {
 //alias for sending JSON encoded messages
 function send(message) {
    //attach the other peer username to our messages
+
    if (connectedUser) {
       message.name = connectedUser;
    }
 
+      console.log("send", message);
    conn.send(JSON.stringify(message));
 };
 
@@ -56,29 +57,30 @@ function send(message) {
 //UI selectors block
 //******
 
-var loginPage = document.querySelector('#loginPage');
-var usernameInput = document.querySelector('#usernameInput');
-var loginBtn = document.querySelector('#loginBtn');
+var loginPage = document.querySelector("#loginPage");
+var usernameInput = document.querySelector("#usernameInput");
+var loginBtn = document.querySelector("#loginBtn");
 
-var callPage = document.querySelector('#callPage');
-var callToUsernameInput = document.querySelector('#callToUsernameInput');
-var callBtn = document.querySelector('#callBtn');
+var callPage = document.querySelector("#callPage");
+var callToUsernameInput = document.querySelector("#callToUsernameInput");
+var callBtn = document.querySelector("#callBtn");
 
-var hangUpBtn = document.querySelector('#hangUpBtn');
+var hangUpBtn = document.querySelector("#hangUpBtn");
 
-var localVideo = document.querySelector('#localVideo');
-var remoteVideo = document.querySelector('#remoteVideo');
+var localVideo = document.querySelector("#localVideo");
+var remoteVideo = document.querySelector("#remoteVideo");
 
 var yourConn;
 var stream;
-
-callPage.style.display = "none";
 
 // Login when the user clicks the button
 loginBtn.addEventListener("click", function (event) {
    name = usernameInput.value;
 
+   console.log("login", "clicked");
    if (name.length > 0) {
+
+      console.log("login", "clicked");
       send({
          type: "login",
          name: name

@@ -1,46 +1,47 @@
+<!DOCTYPE html>
 <html>
-
    <head>
+
+      <meta charset="utf-8">
       <title>WebRTC Video Demo</title>
-      <link rel = "stylesheet" href = "node_modules/bootstrap/dist/css/bootstrap.min.css"/>
    </head>
 
-   <style>
+      <style>
 
-      body {
-         background: #eee;
-         padding: 5% 0;
-      }
+         body {
+            background: #eee;
+            padding: 5% 0;
+         }
 
-      video {
-         background: black;
-         border: 1px solid gray;
-      }
+         video {
+            background: black;
+            border: 1px solid gray;
+         }
 
-      .call-page {
-         position: relative;
-         display: block;
-         margin: 0 auto;
-         width: 500px;
-         height: 500px;
-      }
+         .call-page {
+            position: relative;
+            display: block;
+            margin: 0 auto;
+            width: 500px;
+            height: 500px;
+         }
 
-      #localVideo {
-         width: 150px;
-         height: 150px;
-         position: absolute;
-         top: 15px;
-         right: 15px;
-      }
+         #localVideo {
+            width: 150px;
+            height: 150px;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+         }
 
-      #remoteVideo {
-         width: 500px;
-         height: 500px;
-      }
+         #remoteVideo {
+            width: 500px;
+            height: 500px;
+         }
 
-   </style>
-
+      </style>
    <body>
+
 
    <div id = "loginPage" class = "container text-center">
 
@@ -49,8 +50,7 @@
 
             <h2>WebRTC Video Demo. Please sign in</h2>
             <label for = "usernameInput" class = "sr-only">Login</label>
-            <input type = "email" id = "usernameInput" c
-               lass = "form-control formgroup" placeholder = "Login"
+            <input type = "email" id = "usernameInput" class = "form-control formgroup" placeholder = "Login"
                required = "" autofocus = "">
             <button id = "loginBtn" class = "btn btn-lg btn-primary btnblock">
                Sign in</button>
@@ -75,8 +75,8 @@
 
    </div>
 
-   <script src = "client.js"></script>
 
+    <script src = "clientside.js"></script>
    </body>
 
 </html>
