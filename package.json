@@ -13,7 +13,8 @@
     "bootstrap": "^3.3.7",
     "ejs": "^2.5.6",
     "express": "^4.15.2",
-    "websocket": "^1.0.25"
+    "websocket": "^1.0.25",
+    "ws": "^3.3.2"
   },
   "devDependencies": {
     "request": "^2.81.0",
