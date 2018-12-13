@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+   <head>
+     
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <meta charset="utf-8">
+      <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+      <title>WebRTC Video And Chat With WebSocket</title>
+   </head>
+
+      <style>
+
+         body {
+           width: 100vw;
+           min-height: 100vh;
+            background: #eee;
+            padding: 0;
+            margin: 0;
+            float: left;
+            position: relative;
+            font-family: 'Roboto Condensed', sans-serif;
+         }
+
+         #loginPage{
+           //display: none;
+           width: 100vw;
+           height: 100vh;
+           background-color: #FFC107;
+           position: fixed;
+           float: left;
+           top: 0;
+           left: 0;
+           color: white;
+           z-index: 10;
+           text-align: center;
+
+         }
+         #loginPage >div{
+           position: absolute;
+           top: 50%;
+           float: left;
+           left: 50%;
+           transform: translate(-50%, -50%);
+         }
+         #loginPage input{
+           outline: none;
+           padding: 10px;
+           box-sizing: border-box;
+           height: 41px;
+         }
+         #loginPage button{
+           height: 40px;
+           box-sizing: border-box;
+           border: none;
+           background-color: #009688;
+           color: white;
+           padding: 10px;
+         }
+         button{
+           min-width: 40px;
+           height: 40px;
+           box-sizing: border-box;
+           border: none;
+           background-color: #FFC107;
+           color: #444;
+           padding: 10px;
+           outline: none;
+         }
+         input{
+           outline: none;
+           padding: 10px;
+           box-sizing: border-box;
+           height: 41px;
+         }
+
+         video {
+            background: black;
+            border: 1px solid gray;
+         }
+
+         .call-page {
+            position: absolute;
+            float: left;
+            left: 50%;
+            top: 50px;
+            transform: translateX(-50%);
+            width: 900px;
+            //height: 500px;
+         }
+
+         #localVideo {
+            width: 150px;
+            height: 150px;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            border-radius: 10px;
+         }
+
+         #remoteVideo {
+            width: 500px;
+            height: 500px;
+            border-radius: 10px;
+         }
+         #chatarea{
+           max-height: 300px;
+           overflow-y: scroll;
+           border: 1px solid #ccc;
+           background-color: white;
+           padding: 0px 5px;
+           margin: 10px 0;
+           float: left;
+           width: 100%;
+           box-sizing: border-box;
+
+         }
+         .localmsg{
+           padding: 5px;
+           background-color: #BFC3C7;
+           color: white;
+           border: none;
+           margin: 5px 0;
+           float: left;
+           width: 80%;
+           position: relative;
+           margin-left: 5px;
+           border-radius: 5px;
+         }
+         .localmsg::after{
+           content: '';
+           position: absolute;
+           width: 0;
+           height: 0;
+          float: left;
+          left: -10px;
+          top: 5px;
+          border-right: 5px solid #BFC3C7 !important;
+          border: 5px solid transparent;
+         }
+         span{
+           font-weight: bold;
+           font-style: italic;
+         }
+         .remotemsg{
+           padding: 5px;
+           background-color: #64C87B;
+           color: white;
+           border: none;
+           margin: 5px 0;
+           float: right;
+           width: 80%;
+           text-align: right;
+           position: relative;
+           margin-right: 5px;
+           border-radius: 5px;
+
+         }
+         .remotemsg::after{
+           content: '';
+           position: absolute;
+           width: 0;
+           height: 0;
+          float: right;
+          right: -10px;
+          top: 5px;
+          border-left: 5px solid #64C87B !important;
+          border: 5px solid transparent;
+         }
+         .remotemsg span{
+           text-align: left !important;
+         }
+
+      </style>
+   <body>
+
+
+   <div id = "loginPage" class = "container text-center">
+
+      <div class = "row">
+         <div class = "col-md-4 col-md-offset-4">
+
+            <h2>WebRTC Video And Chat With WebSocket. Please sign in</h2>
+            <label for = "usernameInput" class = "sr-only">Login</label>
+            <input type = "email" id = "usernameInput" class = "form-control formgroup" placeholder = "Login"
+               required = "" autofocus = "">
+            <button id = "loginBtn" class = "btn btn-lg btn-primary btnblock">
+               Sign in</button>
+
+         </div>
+      </div>
+
+   </div>
+
+   <div id = "callPage" class = "call-page">
+     <div style="position:relative; float:left;">
+      <video muted id = "localVideo" autoplay></video>
+      <video id = "remoteVideo" autoplay></video>
+
+      <div class = "row text-center">
+         <div class = "col-md-12">
+            <input id = "callToUsernameInput" type = "text"
+               placeholder = "username to call" />
+            <button id = "callBtn" class = "btn-success btn" style="background-color:#4CAF50; color:white "><i class="fa fa-phone"></i></button>
+            <button id = "hangUpBtn" class = "btn-danger btn " style="background-color:#C62828; color:white " >Hang Up</button>
+         </div>
+      </div>
+    </div>
+      <div style="position:relative; float:right;width:350px;">
+       <div class = "row">
+          <div class = "col-md-4 col-md-offset-4 text-center">
+             <div class = "panel panel-primary" style="margin-top: 20px;">
+                <div class = "panel-heading">Text chat</div>
+                <div id = "chatarea" class = "panel-body text-left"></div>
+             </div>
+          </div>
+       </div>
+
+      <div class = "row text-center">
+         <div class = "col-md-12">
+            <input id = "msgInput" type = "text" placeholder = "message" />
+            <button id = "sendMsgBtn" class = "btn-success btn"><i class="fa fa-paper-plane"></i></button>
+         </div>
+      </div>
+   </div>
+
+ </div>
+
+
+     <script src="adapter.js"></script>
+    <script src = "clientside.js"></script>
+   </body>
+
+</html>

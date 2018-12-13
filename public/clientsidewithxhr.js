@@ -8,46 +8,70 @@ window.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSess
 window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition
   || window.msSpeechRecognition || window.oSpeechRecognition;
 
-var conn = new WebSocket("wss://localhost:443");
+var conn  = "https://localhost/api/v1/xhr";
 
 var constraints = {
   audio: true,
   video: true
 };
 
-conn.onopen = function () {
-   console.log("Connected to server");
-};
+function initSSE(name) {
 
-conn.onmessage = function (msg) {
-   console.log("Got message", msg.data);
+if (!!window.EventSource)
+  {
+    var source = new EventSource('/stream?name='+name);
 
-   var data = JSON.parse(msg.data);
+    source.addEventListener('message', function(e) {
 
-   switch(data.type) {
-      case "login":
-         handleLogin(data.success);
-         break;
-      case "offer":
-         handleOffer(data.offer, data.name);
-         break;
-      case "answer":
-         handleAnswer(data.answer);
-         break;
-      case "candidate":
-         handleCandidate(data.candidate);
-         break;
-      case "leave":
-         handleLeave();
-         break;
-      default:
-         break;
-   }
-};
+      console.log("Got message", e.data);
+      var data = JSON.parse(e.data);
+         switch(data.type) {
+            case "login":
+               handleLogin(data.success);
+               break;
+            case "offer":
+               handleOffer(data.offer, data.name);
+               break;
+            case "answer":
+               handleAnswer(data.answer);
+               break;
+            case "candidate":
+               handleCandidate(data.candidate);
+               break;
+            case "leave":
+               handleLeave();
+               break;
+            default:
+               break;
+         }
+    }, false)
 
-conn.onerror = function (err) {
-   console.log("Got error", err);
-};
+    source.addEventListener('open', function(e) {
+      console.log("sse created");
+      send({
+         type: "login",
+         name: name
+      });
+    }, false)
+
+    source.addEventListener('data', function(e) {
+      console.log("dataaaaaaa created");
+    }, false)
+
+    source.addEventListener('error', function(e) {
+      if (e.target.readyState == EventSource.CLOSED) {
+          console.log("Got error", e);
+      }
+      else if (e.target.readyState == EventSource.CONNECTING) {
+          console.log("Connecting.....");
+      }
+    }, false)
+  }
+  else {
+    console.log("Your browser doesn't support SSE")
+  }
+}
+
 
 function send(message) {
 
@@ -55,8 +79,17 @@ function send(message) {
       message.name = connectedUser;
    }
 
-      console.log("send", message);
-   conn.send(JSON.stringify(message));
+   var xhttp = new XMLHttpRequest();
+   xhttp.onreadystatechange = function() {
+   if (this.readyState == 4 && this.status == 200) {
+       // Action to be performed when the document is read;
+    }
+   };
+
+   xhttp.open("POST", conn, true);
+   xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+   xhttp.send(JSON.stringify(message));
+   console.log("send", message);
 };
 
 var loginPage = document.querySelector("#loginPage");
@@ -81,36 +114,12 @@ var dataChannel;
 var connection;
 var stream;
 
-usernameInput.addEventListener('keyup', function(e){
-
-  console.log("login", "clicked");
-  if (e.keyCode == 13) {
-         name = usernameInput.value;
-
-         console.log("login", "clicked");
-         if (name.length > 0) {
-
-            console.log("login", "clicked");
-            send({
-               type: "login",
-               name: name
-            });
-         }
-  }
-});
-
-
 loginBtn.addEventListener("click", function (event) {
    name = usernameInput.value;
-
-   console.log("login", "clicked");
    if (name.length > 0) {
 
+     initSSE(name);
       console.log("login", "clicked");
-      send({
-         type: "login",
-         name: name
-      });
    }
 
 });
@@ -158,8 +167,6 @@ function handleLogin(success) {
             console.log("data channel message " + event.data);
 
             chatArea.innerHTML += "<div class='remotemsg'>"+"<span>"+connectedUser +"</span>"+ ": " + event.data + "</div>";
-            $('#chatarea').scrollTop($('#chatarea')[0].scrollHeight);
-
          };
 
          dataChannel.onclose = function () {
@@ -201,6 +208,7 @@ callBtn.addEventListener("click", function () {
       connection.createOffer(function (offer) {
          send({
             type: "offer",
+            username: name,
             offer: offer
          });
 
@@ -221,6 +229,7 @@ function handleOffer(offer, name) {
 
       send({
          type: "answer",
+         name: name,
          answer: answer
       });
 
@@ -246,41 +255,30 @@ hangUpBtn.addEventListener("click", function () {
    handleLeave();
 });
 
-msgInput.addEventListener('keyup', function(e){
-
-  if (e.keyCode == 13) {
-    sendMessageForPeer();
-  }
-
-});
-
 sendMsgBtn.addEventListener("click", function (event) {
-  sendMessageForPeer();
+
+  switch(dataChannel.readyState) {
+      case "connecting":
+        console.log("Connection not open;  ");
+        break;
+      case "open":
+
+         var val = msgInput.value;
+         chatArea.innerHTML += "<div class='localmsg'>"+"<span>"+name +"</span>" +": " + val + "</div>";
+
+         dataChannel.send(val);
+         msgInput.value = "";
+
+        break;
+      case "closing":
+        console.log("Attempted to send message while closing: " );
+        break;
+      case "closed":
+        console.log("Error! Attempt to send while connection closed.");
+        break;
+    }
+
 });
-
-function sendMessageForPeer() {
-
-    switch(dataChannel.readyState) {
-        case "connecting":
-          console.log("Connection not open;  ");
-          break;
-        case "open":
-
-           var val = msgInput.value;
-           chatArea.innerHTML += "<div class='localmsg'>"+"<span>"+name +"</span>" +": " + val + "</div>";
-           $('#chatarea').scrollTop($('#chatarea')[0].scrollHeight);
-           dataChannel.send(val);
-           msgInput.value = "";
-
-          break;
-        case "closing":
-          console.log("Attempted to send message while closing: " );
-          break;
-        case "closed":
-          console.log("Error! Attempt to send while connection closed.");
-          break;
-      }
-};
 
 function handleLeave() {
    connectedUser = null;
